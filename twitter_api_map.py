@@ -75,7 +75,6 @@ def generate_map(user_coords):
 
     map = folium.Map(location=[49.842957, 24.031111], zoom_start=3)
     user_location_group = folium.map.FeatureGroup(name="Friends' locations")
-
     while user_coords:
 
         user = user_coords.pop()
@@ -91,23 +90,22 @@ def generate_map(user_coords):
     user_location_group.add_to(map)
     map.add_child(folium.LayerControl())
 
-    map.save('templates/map.html')
+    html_string = map.get_root().render()
+    return html_string
 
-@app.route("/map")
-def map():
-    return render_template("map.html")
 
 @app.route("/", methods=["POST", "GET"])
 def get_data():
+
     if request.method == "POST":
         twitter_name = request.form["twitter_tag"]
         locations_num = request.form["locations_num"]
         user_data = get_user_data(twitter_name, locations_num)
         user_coords = get_user_location_set(user_data)
+        html_str = generate_map(user_coords)
+        context = {"html" : html_str}
 
-        generate_map(user_coords)
-
-        return redirect(url_for("map"))
+        return render_template("map.html",  **context)
     else:
         return render_template("get_data.html")
 
